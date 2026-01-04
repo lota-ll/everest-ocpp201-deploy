@@ -1,0 +1,30 @@
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+
+# Temp files
+*.tmp
+*.bak
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment overrides (keep .env in repo for defaults)
+.env.local
+.env.*.local
+
+# Database files (generated at runtime)
+*.db
+
+# Node modules (if any)
+node_modules/

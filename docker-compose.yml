@@ -1,0 +1,64 @@
+# ============================================================================
+# EVerest OCPP 2.0.1 Docker Compose (FIXED)
+# Для кіберполігону
+# Сервер EVerest: 172.16.0.60
+# Підключення до CitrineOS: 192.168.20.20:8081
+# ============================================================================
+
+services:
+  mqtt-server:
+    image: ghcr.io/everest/everest-demo/mqtt-server:${EVEREST_IMAGE_TAG:-0.0.23}
+    container_name: everest-mqtt-201
+    platform: linux/x86_64
+    restart: unless-stopped
+    logging:
+      driver: none
+    networks:
+      - everest_net_201
+
+  manager:
+    image: ghcr.io/everest/everest-demo/manager:${EVEREST_IMAGE_TAG:-0.0.23}
+    container_name: everest-manager-201
+    platform: linux/x86_64
+    restart: unless-stopped
+    ports:
+      - "8889:8888"  # OCPP Logs viewer
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: '4G'
+    depends_on:
+      - mqtt-server
+    volumes:
+      - ./start.sh:/tmp/start.sh:ro
+    environment:
+      - MQTT_SERVER_ADDRESS=mqtt-server
+      - EVEREST_TARGET_URL=${EVEREST_TARGET_URL:-ws://192.168.20.20:8081/cp002}
+      - CHARGE_POINT_ID=${CHARGE_POINT_ID:-cp002}
+      - SECURITY_PROFILE=${SECURITY_PROFILE:-1}
+    entrypoint: ["/bin/bash", "/tmp/start.sh"]
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    networks:
+      - everest_net_201
+
+  nodered:
+    image: ghcr.io/everest/everest-demo/nodered:${EVEREST_IMAGE_TAG:-0.0.23}
+    container_name: everest-nodered-201
+    platform: linux/x86_64
+    restart: unless-stopped
+    depends_on:
+      - mqtt-server
+    ports:
+      - "1881:1880"  # NodeRed UI
+    environment:
+      - MQTT_SERVER_ADDRESS=mqtt-server
+      - FLOWS=/config/config-sil-two-evse-flow.json
+    networks:
+      - everest_net_201
+
+networks:
+  everest_net_201:
+    driver: bridge
+    enable_ipv6: true
